@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .status-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4facfe;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-stopped {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-error {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .token-display {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #a8a8a8 0%, #696969 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .instructions h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Telegram Bot Manager</h1>
+            <p>Kelola bot Telegram Anda dengan mudah - Siap Deploy ke Vercel</p>
+        </div>
+        
+        <div class="content">
+            <!-- Status Section -->
+            <div class="status-section">
+                <div id="statusIndicator" class="status-indicator status-stopped">
+                    🔴 Bot Berhenti
+                </div>
+                <h3>Status Bot</h3>
+                <p>Token saat ini:</p>
+                <div id="tokenDisplay" class="token-display">
+                    Belum diatur
+                </div>
+            </div>
+            
+            <!-- Alerts -->
+            <div id="successAlert" class="alert alert-success"></div>
+            <div id="errorAlert" class="alert alert-error"></div>
+            
+            <!-- Loading -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Memproses...</p>
+            </div>
+            
+            <!-- Install Packages Section -->
+            <div class="form-section">
+                <h3>1. Install Package (Auto)</h3>
+                <p>Package akan terinstall otomatis saat deploy ke Vercel:</p>
+                <div class="token-display">
+                    python-telegram-bot==20.7<br>
+                    requests==2.31.0<br>
+                    beautifulsoup4==4.12.2<br>
+                    qrcode[pil]==7.4.2<br>
+                    Pillow==10.0.1<br>
+                    urllib3==1.26.18<br>
+                    aiohttp==3.8.5<br>
+                    certifi==2023.7.22<br>
+                    charset-normalizer==3.3.2<br>
+                    soupsieve==2.5<br>
+                    tornado==6.3.3<br>
+                    Flask==2.3.3
+                </div>
+            </div>
+            
+            <!-- Token Input Section -->
+            <div class="form-section">
+                <h3>2. Atur Token Bot</h3>
+                <div class="form-group">
+                    <label for="tokenInput">Token Bot Telegram:</label>
+                    <input type="text" id="tokenInput" placeholder="Masukkan token bot Anda (contoh: 1234567890:ABCdefGHIjklMNopQRstUVwxYZ)" />
+                </div>
+                <button id="startBtn" class="btn btn-primary" onclick="startBot()">
+                    🚀 Jalankan Bot
+                </button>
+                <button id="stopBtn" class="btn btn-danger" onclick="stopBot()" disabled>
+                    ⏹️ Hentikan Bot
+                </button>
+                <button id="downloadBtn" class="btn btn-secondary" onclick="downloadBot()">
+                    📥 Download Bot File
+                </button>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="instructions">
+                <h3>📋 Petunjuk Penggunaan</h3>
+                <ol>
+                    <li><strong>Dapatkan Token</strong> - Dapatkan token bot dari @BotFather di Telegram</li>
+                    <li><strong>Masukkan Token</strong> - Masukkan token bot Anda di form input</li>
+                    <li><strong>Jalankan Bot</strong> - Klik "Jalankan Bot" untuk memulai bot Telegram</li>
+                    <li><strong>Hentikan Bot</strong> - Gunakan "Hentikan Bot" untuk menghentikan bot jika diperlukan</li>
+                    <li><strong>Download File</strong> - Gunakan "Download Bot File" untuk mendapatkan file Python bot yang sudah dikonfigurasi</li>
+                </ol>
+                <p><strong>Fitur Bot:</strong></p>
+                <ul>
+                    <li>🔒 Encrypt & Decrypt HTML</li>
+                    <li>🌐 Save Web to ZIP</li>
+                    <li>🚀 Deploy Website ke OjiCloud & Vercel</li>
+                    <li>📢 Broadcast Message</li>
+                    <li>🆔 Cek ID Telegram</li>
+                </ul>
+                <p><strong>Catatan:</strong> Hanya token utama yang bisa diganti. Token admin dan konfigurasi lainnya tetap menggunakan setting default.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStatus = 'stopped';
+        
+        // Fungsi untuk menampilkan alert
+        function showAlert(type, message) {
+            const alert = document.getElementById(type + 'Alert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Fungsi untuk menampilkan/menyembunyikan loading
+        function setLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+        
+        // Fungsi untuk update status
+        function updateStatus(status, token) {
+            currentStatus = status;
+            const indicator = document.getElementById('statusIndicator');
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            // Update status indicator
+            indicator.className = 'status-indicator';
+            if (status === 'running') {
+                indicator.classList.add('status-running');
+                indicator.innerHTML = '🟢 Bot Berjalan';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                downloadBtn.disabled = false;
+            } else if (status === 'error') {
+                indicator.classList.add('status-error');
+                indicator.innerHTML = '⚠️ Bot Error';
+                startBtn.disabled = false;
+                stopBtn.disabled = false;
+                downloadBtn.disabled = false;
+            } else {
+                indicator.classList.add('status-stopped');
+                indicator.innerHTML = '🔴 Bot Berhenti';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                downloadBtn.disabled = !token;
+            }
+            
+            // Update token display
+            tokenDisplay.textContent = token || 'Belum diatur';
+        }
+        
+        // Fungsi untuk mendapatkan status terkini
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                updateStatus(data.status, data.current_token);
+            } catch (error) {
+                console.error('Error refreshing status:', error);
+            }
+        }
+        
+        // Fungsi start bot
+        async function startBot() {
+            const token = document.getElementById('tokenInput').value.trim();
+            
+            if (!token) {
+                showAlert('error', 'Token tidak boleh kosong');
+                return;
+            }
+            
+            // Validasi format token sederhana
+            if (!token.includes(':')) {
+                showAlert('error', 'Format token tidak valid. Token harus berformat: 1234567890:ABCdefGHIjklMNopQRstUVwxYZ');
+                return;
+            }
+            
+            setLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('token', token);
+                
+                const response = await fetch('/start_bot', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('success', data.message);
+                    updateStatus('running', token);
+                } else {
+                    showAlert('error', data.message);
+                }
+            } catch (error) {
+                showAlert('error', 'Error: ' + error.message);
+            } finally {
+                setLoading(false);
+                // Refresh status setelah 2 detik
+                setTimeout(refreshStatus, 2000);
+            }
+        }
+        
+        // Fungsi stop bot
+        async function stopBot() {
+            setLoading(true);
+            try {
+                const response = await fetch('/stop_bot', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('success', data.message);
+                    updateStatus('stopped', document.getElementById('tokenDisplay').textContent);
+                } else {
+                    showAlert('error', data.message);
+                }
+            } catch (error) {
+                showAlert('error', 'Error: ' + error.message);
+            } finally {
+                setLoading(false);
+                // Refresh status setelah 2 detik
+                setTimeout(refreshStatus, 2000);
+            }
+        }
+        
+        // Fungsi download bot
+        async function downloadBot() {
+            try {
+                const token = document.getElementById('tokenDisplay').textContent;
+                if (!token || token === 'Belum diatur') {
+                    showAlert('error', 'Belum ada token yang diatur');
+                    return;
+                }
+                
+                // Download file
+                window.open('/download_bot', '_blank');
+                
+            } catch (error) {
+                showAlert('error', 'Error: ' + error.message);
+            }
+        }
+        
+        // Auto refresh status setiap 10 detik
+        setInterval(refreshStatus, 10000);
+        
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStatus();
+        });
+    </script>
+</body>
+</html>
